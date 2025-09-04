@@ -1,0 +1,38 @@
+# ======================================================================
+#  Core Django Framework
+# ======================================================================
+django==5.2.3
+
+# ======================================================================
+#  Django REST Framework & Authentication
+# ======================================================================
+# For building the REST API
+djangorestframework==3.15.1
+# For JWT (JSON Web Token) authentication
+djangorestframework-simplejwt==5.5.1
+# For handling Cross-Origin Resource Sharing (CORS)
+django-cors-headers==4.4.0
+
+# ======================================================================
+#  Artificial Intelligence
+# ======================================================================
+# Google Gemini AI client library
+google-generativeai==0.8.5
+
+# ======================================================================
+#  Database Driver
+# ======================================================================
+# PostgreSQL driver (needed for your DATABASE_URL in .env)
+psycopg2-binary==2.9.9
+
+# ======================================================================
+#  Utilities
+# ======================================================================
+# For reading variables from the .env file
+python-dotenv==1.0.1
+
+# ======================================================================
+#  Production Server (Optional but recommended)
+# ======================================================================
+# A WSGI server for deploying the application in production
+gunicorn==22.0.0
