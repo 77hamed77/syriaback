@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: syriagpt_backend
+    env: python
+    pythonVersion: 3.10.11
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn syriagpt_backend.wsgi:application"
+    healthCheckPath: /studio/login/
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: syriagpt_backend
+          property: connectionString
+
+      - key: SECRET_KEY
+        generateValue: true
+
+      - key: WEB_CONCURRENCY
+        value: "1"
+
+      - key: EXTERNAL_DATABASE_URL
+        value: "postgresql://postgres.bucnkveoguavydxvlwzt:rax111rax@aws-1-eu-central-1.pooler.supabase.com:6543/postgres"
+
+      - key: SUPABASE_S3_ACCESS_KEY_ID
+        value: "795d22edcfb1cb07e9de623950c6f1f4"
+      - key: SUPABASE_S3_SECRET_ACCESS_KEY
+        value: "f363169745bef4194e83b419d63b3583acea8618904d9ceb037fcaec8de42783"
+      - key: SUPABASE_S3_BUCKET_NAME
+        value: "syriagpt_backend_bucket"
+      - key: SUPABASE_S3_ENDPOINT_URL
+        value: "https://bucnkveoguavydxvlwzt.storage.supabase.co/storage/v1/s3"
+      - key: SUPABASE_S3_REGION_NAME
+        value: "eu-central-1"
+
+      - key: DEBUG
+        value: "False"
+
+      - key: ALLOWED_HOSTS
+        value: "syriagpt_backend.onrender.com"

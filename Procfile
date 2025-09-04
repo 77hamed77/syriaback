@@ -1,0 +1,1 @@
+web: gunicorn syriagpt_backend.wsgi:application
