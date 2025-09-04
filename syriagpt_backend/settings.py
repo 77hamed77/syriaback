@@ -140,7 +140,7 @@ SIMPLE_JWT = {
 }
 
 # اقرأ روابط الواجهة الأمامية المسموح بها من متغيرات البيئة
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000').split(',')
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='https://syriachatgpt.vercel.app').split(',')
 
 # ==============================================================================
 # DEFAULT PRIMARY KEY
