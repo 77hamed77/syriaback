@@ -1,10 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# exit on error
 set -o errexit
 
-# تحديث pip وتثبيت المتطلبات
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# ترحيل قاعدة البيانات
-python manage.py migrate 
-
+python manage.py makemigrations
+python manage.py migrate
