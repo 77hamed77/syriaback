@@ -4,8 +4,8 @@ services:
     env: python
     pythonVersion: 3.10.11
     buildCommand: "./build.sh"
-    startCommand: "gunicorn syriagpt_backend.wsgi:application"
-    healthCheckPath: /studio/login/
+    startCommand: "gunicorn syriagpt_backend.wsgi --timeout 120"
+    healthCheckPath: /api/login
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -19,16 +19,16 @@ services:
         value: "1"
 
       - key: EXTERNAL_DATABASE_URL
-        value: "postgresql://postgres.yfbbdvjnezhfyggsyvie:rax111rax@aws-1-eu-central-1.pooler.supabase.com:6543/postgres"
+        value: "postgresql://postgres.czremjnmwfxgfkldynck:rax111rax@aws-1-eu-central-1.pooler.supabase.com:6543/postgres"
 
       - key: SUPABASE_S3_ACCESS_KEY_ID
-        value: "7f10ab23c497109cd09e9e05e10db8cc"
+        value: "c0d1ae82173b5968913330ea0b899127"
       - key: SUPABASE_S3_SECRET_ACCESS_KEY
-        value: "f2ad529a5aee1085d49b75d59048f40633fe3f67e784f581a77d4a5ab048d4ed"
+        value: "9bd7e262b09cb72e6d4bbe94c7bcf6de70998eca71d9e4f22a55badc66b81cc8"
       - key: SUPABASE_S3_BUCKET_NAME
         value: "syriagpt_backend_bucket"
       - key: SUPABASE_S3_ENDPOINT_URL
-        value: "https://yfbbdvjnezhfyggsyvie.storage.supabase.co/storage/v1/s3"
+        value: "https://czremjnmwfxgfkldynck.storage.supabase.co/storage/v1/s3"
       - key: SUPABASE_S3_REGION_NAME
         value: "eu-central-1"
 
