@@ -6,5 +6,5 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 # ترحيل قاعدة البيانات
-python manage.py migrate --noinput
+python manage.py migrate 
 
