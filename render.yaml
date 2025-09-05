@@ -19,16 +19,16 @@ services:
         value: "1"
 
       - key: EXTERNAL_DATABASE_URL
-        value: "postgresql://postgres.czremjnmwfxgfkldynck:rax111rax@aws-1-eu-central-1.pooler.supabase.com:6543/postgres"
+        value: "postgresql://postgres.lwjwnkeeslfrgcbnzrco:rax111rax@aws-1-eu-central-1.pooler.supabase.com:6543/postgres"
 
       - key: SUPABASE_S3_ACCESS_KEY_ID
-        value: "c0d1ae82173b5968913330ea0b899127"
+        value: "edf57fb3e31c52f48f53a1917b7f4916"
       - key: SUPABASE_S3_SECRET_ACCESS_KEY
-        value: "9bd7e262b09cb72e6d4bbe94c7bcf6de70998eca71d9e4f22a55badc66b81cc8"
+        value: "fb32c28fd9b5ab6552ae71f493edfa39f319435076915ba15ee4386e3065b08d"
       - key: SUPABASE_S3_BUCKET_NAME
         value: "syriagpt_backend_bucket"
       - key: SUPABASE_S3_ENDPOINT_URL
-        value: "https://czremjnmwfxgfkldynck.storage.supabase.co/storage/v1/s3"
+        value: "https://lwjwnkeeslfrgcbnzrco.storage.supabase.co/storage/v1/s3"
       - key: SUPABASE_S3_REGION_NAME
         value: "eu-central-1"
 
