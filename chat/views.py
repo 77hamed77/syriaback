@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from google.api_core import exceptions as google_exceptions
 
-# تحميل متغيرات البيئة
 load_dotenv()
 
 # تهيئة الذكاء الاصطناعي
@@ -59,46 +58,43 @@ class MessageListView(generics.ListCreateAPIView):
         user_message = serializer.save(chat=chat, is_ai_response=False)
 
         if not gemini_model:
-            # إرجاع استجابة JSON صالحة في حالة الخطأ
-            error_content = "AI service is not configured. Please contact support."
-            Message.objects.create(chat=chat, content=error_content, is_ai_response=True)
-            return Response({"error": error_content}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({"error": "AI service is not configured."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        def stream_gemini_response():
-            full_response_content = ""
-            try:
-                history = self.get_queryset().exclude(id=user_message.id)
-                gemini_history = [
-                    {"role": "model" if msg.is_ai_response else "user", "parts": [msg.content]}
-                    for msg in history
-                ]
-                
-                chat_session = gemini_model.start_chat(history=gemini_history)
-                response_stream = chat_session.send_message(user_message.content, stream=True)
-
-                for chunk in response_stream:
-                    if chunk.text:
-                        full_response_content += chunk.text
-                        yield chunk.text
-
-            # --- معالجة محسنة للأخطاء ---
-            except google_exceptions.ResourceExhausted as e:
-                error_text = "You have exceeded your API quota. Please check your plan and billing details."
-                full_response_content = error_text
-                yield error_text
-                print(f"Gemini Quota Error: {e}")
-            except Exception as e:
-                error_text = f"An unexpected error occurred with the AI service."
-                full_response_content = error_text
-                yield error_text
-                print(f"Gemini API Error: {e}")
-            # -----------------------------
+        try:
+            # --- الخطوة 1: بناء السجل ---
+            history = self.get_queryset().exclude(id=user_message.id)
+            gemini_history = [
+                {"role": "model" if msg.is_ai_response else "user", "parts": [msg.content]}
+                for msg in history
+            ]
+            chat_session = gemini_model.start_chat(history=gemini_history)
             
-            finally:
-                if full_response_content:
-                    Message.objects.create(chat=chat, content=full_response_content.strip(), is_ai_response=True)
+            # --- الخطوة 2: محاولة بدء التدفق ---
+            response_stream = chat_session.send_message(user_message.content, stream=True)
 
-        return StreamingHttpResponse(stream_gemini_response(), content_type='text/plain; charset=utf-8')
+            # --- دالة مولدة للتدفق الناجح ---
+            def stream_generator():
+                full_response_content = ""
+                try:
+                    for chunk in response_stream:
+                        if chunk.text:
+                            full_response_content += chunk.text
+                            yield chunk.text
+                finally:
+                    if full_response_content:
+                        Message.objects.create(chat=chat, content=full_response_content.strip(), is_ai_response=True)
+            
+            return StreamingHttpResponse(stream_generator(), content_type='text/plain; charset=utf-8')
+
+        # --- الخطوة 3: التقاط الأخطاء وإرجاع استجابة JSON ---
+        except google_exceptions.ResourceExhausted as e:
+            error_message = "You have exceeded your API quota. Please try again later."
+            print(f"Gemini Quota Error: {e}")
+            return Response({"detail": error_message}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        except Exception as e:
+            error_message = "An unexpected error occurred with the AI service."
+            print(f"Gemini API Error: {e}")
+            return Response({"detail": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # ========================================================================
 # عرض التقييم (تم تحسينه للسماح بالتحديث)
