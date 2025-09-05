@@ -25,39 +25,32 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 # 2. معالج بيانات المستخدم (تمت إضافة حقول الإحصائيات)
 # ========================================================================
 class UserSerializer(serializers.ModelSerializer):
-    # --- هذان هما الحقلان الجديدان ---
     conversations_count = serializers.SerializerMethodField()
     active_days = serializers.SerializerMethodField()
-    # --------------------------------
 
     class Meta:
         model = CustomUser
-        # --- تم تحديث قائمة الحقول ---
+        # --- أضف 'username' إلى قائمة الحقول ---
         fields = [
-            'id', 'email', 'first_name', 'last_name', 'profile_picture', 
-            'phone_number', 'date_joined', # أضفنا تاريخ الانضمام
+            'id', 'username', 'email', 'first_name', 'last_name', 'profile_picture', 
+            'phone_number', 'date_joined',
             'conversations_count', 'active_days'
         ]
-        read_only_fields = ['email', 'date_joined']
+        # --- أضف 'username' إلى حقول القراءة فقط ---
+        read_only_fields = ['email', 'date_joined', 'username']
         extra_kwargs = {
             'first_name': {'required': False},
             'last_name': {'required': False}
         }
 
-    # --- هاتان هما الدالتان الجديدتان لحساب الإحصائيات ---
     def get_conversations_count(self, obj):
-        """يحسب عدد المحادثات للمستخدم."""
-        # obj هو كائن المستخدم (CustomUser)
         return obj.chats.count()
 
     def get_active_days(self, obj):
-        """يحسب عدد الأيام منذ انضمام المستخدم."""
         if not obj.date_joined:
             return 0
         delta = timezone.now() - obj.date_joined
-        # نضيف 1 ليعتبر يوم الانضمام هو اليوم الأول
         return delta.days + 1
-    # ----------------------------------------------------
 
 # ========================================================================
 # 3. معالج إنشاء حساب جديد

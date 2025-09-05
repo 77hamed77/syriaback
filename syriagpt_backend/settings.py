@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'users',
     'chat',
     'qa',
+    'admin_panel',
 ]
 
 MIDDLEWARE = [

@@ -7,7 +7,7 @@ from users.views import MyTokenObtainPairView # <-- استيراد العرض ا
 # --------------------
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('secret-control-panel-gpt/', admin.site.urls), 
     
     # --- هذا هو السطر الذي تم تعديله ---
     # الآن يستخدم العرض المخصص الذي يرجع بيانات المستخدم مع التوكن
@@ -17,4 +17,5 @@ urlpatterns = [
     path('api/sessions/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/users/', include('users.urls')),
     path('api/chat/', include('chat.urls')),
+    path('api/admin/', include('admin_panel.urls')),
 ]

@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from .models import Chat, Message
 from .serializers import ChatSerializer, MessageSerializer, FeedbackSerializer
+from django.http import StreamingHttpResponse
 
 # --- استيرادات جديدة للذكاء الاصطناعي والإعدادات ---
 import os
@@ -48,8 +49,8 @@ class MessageListView(generics.ListCreateAPIView):
         chat_id = self.kwargs['chat_id']
         return Message.objects.filter(chat__id=chat_id, chat__user=self.request.user).order_by('created_at')
 
+    # --- تم تعديل هذه الدالة بالكامل ---
     def create(self, request, *args, **kwargs):
-        # 1. التحقق من صحة رسالة المستخدم وحفظها
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
@@ -61,44 +62,43 @@ class MessageListView(generics.ListCreateAPIView):
             
         user_message = serializer.save(chat=chat, is_ai_response=False)
 
-        # 2. التحقق من تهيئة نموذج الذكاء الاصطناعي
         if not gemini_model:
-            error_message = "AI service is not configured."
-            ai_response_message = Message.objects.create(chat=chat, content=error_message, is_ai_response=True)
-            return Response({
-                "user_message": MessageSerializer(user_message).data,
-                "ai_message": MessageSerializer(ai_response_message).data
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({"error": "AI service is not configured."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        # 3. إرسال الرسالة إلى خدمة الذكاء الاصطناعي
-        try:
-            # (اختياري ولكن موصى به) بناء سجل المحادثة لإعطاء السياق للذكاء الاصطناعي
-            history = self.get_queryset().exclude(id=user_message.id)
-            gemini_history = [
-                {"role": "model" if msg.is_ai_response else "user", "parts": [msg.content]}
-                for msg in history
-            ]
+        # --- دالة مولدة (Generator) لمعالجة الرد المتدفق ---
+        def stream_gemini_response():
+            full_response_content = ""
+            try:
+                history = self.get_queryset().exclude(id=user_message.id)
+                gemini_history = [
+                    {"role": "model" if msg.is_ai_response else "user", "parts": [msg.content]}
+                    for msg in history
+                ]
+                
+                chat_session = gemini_model.start_chat(history=gemini_history)
+                
+                # استخدم stream=True للحصول على الرد بشكل متدفق
+                response_stream = chat_session.send_message(user_message.content, stream=True)
+
+                for chunk in response_stream:
+                    if chunk.text:
+                        full_response_content += chunk.text
+                        yield chunk.text # إرسال كل جزء إلى الواجهة الأمامية
+
+            except Exception as e:
+                error_text = f"An error occurred with the AI service: {str(e)}"
+                full_response_content = error_text
+                yield error_text
+                print(f"Gemini API Error: {e}")
             
-            # بدء محادثة جديدة مع السجل
-            chat_session = gemini_model.start_chat(history=gemini_history)
-            
-            # إرسال الرسالة الجديدة
-            response = chat_session.send_message(user_message.content)
-            ai_content = response.text
+            finally:
+                # بعد انتهاء التدفق، قم بحفظ الرسالة الكاملة في قاعدة البيانات
+                if full_response_content:
+                    Message.objects.create(chat=chat, content=full_response_content.strip(), is_ai_response=True)
 
-        except Exception as e:
-            ai_content = f"An error occurred with the AI service: {str(e)}"
-            print(f"Gemini API Error: {e}")
-
-        # 4. حفظ رد الذكاء الاصطناعي في قاعدة البيانات
-        ai_message = Message.objects.create(chat=chat, content=ai_content, is_ai_response=True)
-
-        # 5. إرجاع كل من رسالة المستخدم ورد الذكاء الاصطناعي إلى الواجهة الأمامية
-        return Response({
-            "user_message": MessageSerializer(user_message).data,
-            "ai_message": MessageSerializer(ai_message).data
-        }, status=status.HTTP_201_CREATED)
-
+        # إرجاع استجابة متدفقة
+        return StreamingHttpResponse(stream_gemini_response(), content_type='text/plain')
+    
 class FeedbackCreateView(generics.CreateAPIView):
     serializer_class = FeedbackSerializer
     permission_classes = [IsAuthenticated]
